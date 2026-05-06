@@ -2,130 +2,205 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="تطبيقي الخاص">
-    <link rel="apple-touch-icon" href="257cf7e9-8367-4520-83c2-672f4f5db331.png">
-    <title>تطبيقي الخاص</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إحصائيات الجنائز - الرياض</title>
     <style>
         :root {
-            --apple-bg: #0b1c16;
-            --apple-card: rgba(22, 45, 36, 0.7);
-            --apple-gold: #d4af37;
-            --apple-text: #ffffff;
-            --apple-blur: blur(20px);
+            --gold: #d4af37;
+            --bg-dark: #0b1c16;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.7);
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Arabic", sans-serif;
-            background-color: var(--apple-bg);
-            background-image: radial-gradient(circle at top, #162d24 0%, #0b1c16 100%);
-            color: var(--apple-text);
-            margin: 0; padding: 0; height: 100vh; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-        .header { padding: 40px 20px 10px; text-align: center; }
-        .header img { width: 50px; border-radius: 12px; border: 1px solid var(--apple-gold); }
-        .content-area { height: calc(100vh - 170px); overflow-y: auto; padding: 0 20px; }
-        .page { display: none; }
-        .page.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: linear-gradient(145deg, #0b1c16, #0f2620);
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--gold);
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 12px;
+            margin-top: 0;
+        }
+
+        .total-box {
+            background: rgba(212, 175, 55, 0.12);
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-num {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
         .card {
-            background: var(--apple-card); backdrop-filter: var(--apple-blur);
-            border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            border: 0.5px solid rgba(212, 175, 55, 0.2); text-align: center;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: right;
         }
-        .val { font-size: 45px; font-weight: 200; color: var(--apple-gold); }
-        .tab-bar {
-            position: fixed; bottom: 0; width: 100%; height: 85px;
-            background: rgba(11, 28, 22, 0.95); display: flex; justify-content: space-around;
+
+        .card-title {
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
         }
-        .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; flex: 1; text-decoration: none; font-size: 10px; }
-        .tab-item.active { color: var(--apple-gold); }
-        .f-stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .btn { background: var(--apple-gold); color: #0b1c16; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; }
+
+        .card-num {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* زر التحديث العلوي */
+        #refresh-trigger {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid var(--gold);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header"><img src="257cf7e9-8367-4520-83c2-672f4f5db331.png"></div>
+    <div id="refresh-trigger" onclick="fetchData()">🔄 تحديث البيانات</div>
 
-    <div class="content-area">
-        <div id="page-prayers" class="page active">
-            <div class="card">
-                <div id="p-name" style="color: var(--apple-gold);">موعد الصلاة</div>
-                <div id="p-timer" class="val">00:00:00</div>
+    <div class="container" id="main-content">
+        <div class="header">
+            <h1>إحصائيات الجنائز</h1>
+            <p id="current-date">الرياض • جاري التحميل...</p>
+        </div>
+
+        <div class="total-box">
+            <span>إجمالي اليوم</span>
+            <div>
+                <span class="total-num" id="total-count">0</span>
+                <span style="font-size: 12px; color: var(--text-dim);">جنازة</span>
             </div>
         </div>
 
-        <div id="page-funerals" class="page">
-            <h3 style="text-align: center;">جنائز الرياض اليوم</h3>
-            <div id="f-container"><div class="card">جاري جلب البيانات فوراً...</div></div>
-        </div>
-
-        <div id="page-quran" class="page">
+        <div class="grid">
             <div class="card">
-                <div class="val">ص <span id="q-page">1</span></div>
-                <button class="btn" onclick="addPages()">تمت قراءة 4 صفحات</button>
+                <div class="card-title">☀️ الظهر</div>
+                <div class="card-num" id="count-Dhuhr">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🌤️ العصر</div>
+                <div class="card-num" id="count-Asr">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🌅 المغرب</div>
+                <div class="card-num" id="count-Maghrib">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🌙 العشاء</div>
+                <div class="card-num" id="count-Isha">0</div>
             </div>
         </div>
+
+        <p style="font-size: 10px; color: var(--text-dim); margin-top: 20px;" id="last-update">آخر تحديث: --:--</p>
     </div>
 
-    <nav class="tab-bar">
-        <div class="tab-item active" onclick="tab('prayers', this)">🕒<span>الصلوات</span></div>
-        <div class="tab-item" onclick="tab('funerals', this)">🕌<span>الجنائز</span></div>
-        <div class="tab-item" onclick="tab('quran', this)">📖<span>الورد</span></div>
-    </nav>
-
     <script>
-        // نظام الصلاة
-        const prayerTimes = [
-            { name: "الفجر", time: "04:15" }, { name: "الظهر", time: "12:05" },
-            { name: "العصر", time: "15:30" }, { name: "المغرب", time: "18:35" }, { name: "العشاء", time: "20:05" }
-        ];
+        const API_URL = "https://script.google.com/macros/s/AKfycbwKXOikhG5yz-KC2B6gJUZUbomAJ2qf7TqVqJBhWnnlESAhBM4QTydgn08cF9H7Jp0/exec?type=json";
 
-        function updateCountdown() {
-            const now = new Date();
-            let nextP = prayerTimes.find(p => {
-                let d = new Date(); let [h,m] = p.time.split(':');
-                d.setHours(h,m,0); return d > now;
-            }) || {name: "الفجر", time: "04:15"};
+        async function fetchData() {
+            const btn = document.getElementById('refresh-trigger');
+            const content = document.getElementById('main-content');
             
-            let d = new Date(); let [h,m] = nextP.time.split(':');
-            d.setHours(h,m,0); if (d < now) d.setDate(d.getDate()+1);
-            let diff = d - now;
-            let hh = Math.floor(diff/3600000); let mm = Math.floor((diff%3600000)/60000); let ss = Math.floor((diff%60000)/1000);
-            document.getElementById('p-name').innerText = "متبقي على " + nextP.name;
-            document.getElementById('p-timer').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-        }
+            btn.innerText = "⏳ جاري التحديث...";
+            content.classList.add('loading');
 
-        // جلب الجنائز مع منع التخزين المؤقت (التحديث الفوري)
-        async function fetchF() {
-            const URL = "https://script.google.com/macros/s/AKfycbwKXOikhG5yz-KC2B6gJUZUbomAJ2qf7TqVqJBhWnnlESAhBM4QTydgn08cF9H7Jp0/exec?type=json&t=" + new Date().getTime();
+            // إضافة الـ Timestamp لمنع الـ Cache نهائياً
+            const finalUrl = `${API_URL}&t=${new Date().getTime()}`;
+
             try {
-                const res = await fetch(URL);
-                const d = await res.json();
-                document.getElementById('f-container').innerHTML = `
-                    <div class="card">
-                        <div class="f-stat"><span>الظهر</span><b>${d.counts.Dhuhr}</b></div>
-                        <div class="f-stat"><span>العصر</span><b>${d.counts.Asr}</b></div>
-                        <div class="f-stat"><span>المغرب</span><b>${d.counts.Maghrib}</b></div>
-                        <div class="f-stat"><span>العشاء</span><b>${d.counts.Isha}</b></div>
-                    </div>`;
-            } catch (e) { document.getElementById('f-container').innerHTML = '<div class="card">حدث خطأ في الجلب</div>'; }
+                const response = await fetch(finalUrl);
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error("خطأ في جلب البيانات:", error);
+                alert("تعذر جلب البيانات، تأكد من الاتصال.");
+            } finally {
+                btn.innerText = "🔄 تحديث البيانات";
+                content.classList.remove('loading');
+            }
         }
 
-        let currP = localStorage.getItem('currP') || 1;
-        function addPages() { currP = parseInt(currP)+4; localStorage.setItem('currP', currP); document.getElementById('q-page').innerText = currP; }
-        document.getElementById('q-page').innerText = currP;
+        function updateUI(data) {
+            const counts = data.counts;
+            
+            // تحديث الأرقام
+            document.getElementById('count-Dhuhr').innerText = counts.Dhuhr || 0;
+            document.getElementById('count-Asr').innerText = counts.Asr || 0;
+            document.getElementById('count-Maghrib').innerText = counts.Maghrib || 0;
+            document.getElementById('count-Isha').innerText = counts.Isha || 0;
 
-        function tab(id, el) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            document.getElementById('page-' + id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'funerals') fetchF();
+            // حساب الإجمالي
+            const total = (counts.Dhuhr || 0) + (counts.Asr || 0) + (counts.Maghrib || 0) + (counts.Isha || 0);
+            document.getElementById('total-count').innerText = total;
+
+            // تحديث التاريخ والوقت
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-SA', { weekday: 'long', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+            
+            document.getElementById('current-date').innerText = `الرياض • ${dateStr}`;
+            document.getElementById('last-update').innerText = `آخر تحديث: ${timeStr}`;
         }
 
-        setInterval(updateCountdown, 1000);
+        // تشغيل تلقائي عند فتح الصفحة
+        window.onload = fetchData;
     </script>
 </body>
 </html>
